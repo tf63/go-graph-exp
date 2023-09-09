@@ -1,0 +1,30 @@
+{
+    "name": "Go",
+    "dockerComposeFile": "../docker-compose.yml",
+    "service": "backend",
+    "workspaceFolder": "/app",
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "go.toolsManagement.checkForUpdates": "off",
+                "go.gopath": "/go", 
+                "go.formatTool": "goimports",
+                "go.useLanguageServer": true,
+                "[go]": {
+                    "editor.formatOnSave": true
+                },
+                "gopls": {
+                    "analyses": {
+                        "ST1003": true,
+                        "ST1016": true,
+                        "ST1020": true, 
+                        "ST1021": true, 
+                        "ST1022": true,
+                        "ST1023": true
+                    }
+                }
+            },
+            "extensions": ["golang.go", "arjun.swagger-viewer"]
+        }
+    }
+}

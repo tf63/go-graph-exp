@@ -1,0 +1,11 @@
+{
+    "markdown.marp.enableHtml": true,
+    "markdown.marp.mathTypesetting": "katex", // or mathjax (katexだと\bmが使える)
+    "markdown.marp.themes": [
+        "./theme/lab.css"
+    ],
+    "markdown.copyFiles.destination": {
+        // https://code.visualstudio.com/updates/v1_79#_copy-external-media-files-into-workspace-on-drop-or-paste-for-markdown
+        "*.md": "${documentDirName}/img/${documentBaseName}.png"
+    }
+}

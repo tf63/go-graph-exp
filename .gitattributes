@@ -1,0 +1,4 @@
+docs/**/* linguist-vendored
+backend/docs/**/* linguist-vendored
+*.html linguist-vendored
+*.css linguist-vendored
