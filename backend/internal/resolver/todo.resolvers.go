@@ -6,19 +6,36 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/tf63/go-graph-exp/api/graph"
 )
 
 // CreateTodo is the resolver for the createTodo field.
 func (r *mutationResolver) CreateTodo(ctx context.Context, input graph.NewTodo) (*graph.Todo, error) {
-	panic(fmt.Errorf("not implemented: CreateTodo - createTodo"))
+	// inputを元にTodoを生成
+	// -----------------------------------
+	// (今回は実装しません)
+	// -----------------------------------
+
+	// 作成したTodoを返す
+	todo1 := graph.Todo{
+		ID:   "1",
+		Text: "todo 1",
+		Done: false,
+	}
+	return &todo1, nil
 }
 
 // Todos is the resolver for the todos field.
 func (r *queryResolver) Todos(ctx context.Context) ([]*graph.Todo, error) {
-	panic(fmt.Errorf("not implemented: Todos - todos"))
+	// テストデータを返す
+	todos := []*graph.Todo{
+		{ID: "1", Text: "todo 1", Done: false},
+		{ID: "2", Text: "todo 2", Done: false},
+		{ID: "3", Text: "todo 3", Done: false},
+	}
+
+	return todos, nil
 }
 
 // Mutation returns graph.MutationResolver implementation.
