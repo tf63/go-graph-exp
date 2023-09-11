@@ -2,18 +2,19 @@ package repository
 
 import (
 	"database/sql"
-	"time"
+	"log"
 
 	"github.com/tf63/go-graph-exp/internal/entity"
 )
 
 type TodoRepository interface {
-	CreateTodo(input entity.NewTodo) (TodoId int, err error)
-	ReadTodos() (Todos []entity.Todo, err error)
+	CreateTodo(input entity.NewTodo) (todoId int, err error)
+	ReadTodos() (todos []entity.Todo, err error)
+	ReadTodo(todoId int) (todo entity.Todo, err error)
 }
 
 type todoRepository struct {
-	db *sql.DB // repositoryはdbへの接続を担う
+	Db *sql.DB // repositoryはdbへの接続を担う
 }
 
 // インターフェースを実装しているかチェック
@@ -23,16 +24,19 @@ func NewTodoRepository(db *sql.DB) TodoRepository {
 	return &todoRepository{db}
 }
 
-func (tr *todoRepository) CreateTodo(input entity.NewTodo) (TodoId int, err error) {
+// Todoの作成
+func (tr *todoRepository) CreateTodo(input entity.NewTodo) (todoId int, err error) {
 
 	// 入力
 	text := input.Text
 
+	println("start transaction")
 	// トランザクションを開始
-	tx, err := tr.db.Begin()
+	tx, err := tr.Db.Begin()
 	if err != nil {
+		log.Fatal(err)
 		err = entity.STATUS_SERVICE_UNAVAILABLE
-		return
+		return 0, err
 	}
 
 	// エラーが生じた場合はロールバック
@@ -40,58 +44,85 @@ func (tr *todoRepository) CreateTodo(input entity.NewTodo) (TodoId int, err erro
 
 	// 実行するSQL (プレースホルダを使う)
 	query := `
-	INSERT INTO Todos (text, done, created_at, updated_at)
-	VALUES (?, ?, ?, ?)
+	INSERT INTO todos (text, done)
+		VALUES ($1, $2)
+		RETURNING id
 	`
 
 	// 　SQL文の入力
 	args := []interface{}{
 		text,
 		false,
-		time.Now(),
-		time.Now(),
 	}
 
 	// レコードの作成
-	_, err = tr.db.Exec(query, args...)
+	err = tr.Db.QueryRow(query, args...).Scan(&todoId)
 	if err != nil {
+		log.Fatal(err)
 		err = entity.STATUS_SERVICE_UNAVAILABLE
-		return
-	}
-
-	// 戻り値を取得
-	err = tr.db.QueryRow(`SELECT id FROM Todos ORDER BY id DESC LIMIT 1`).Scan(&TodoId)
-	if err != nil {
-		err = entity.STATUS_SERVICE_UNAVAILABLE
-		return
+		return 0, err
 	}
 
 	// トランザクションのコミット
 	err = tx.Commit()
 	if err != nil {
+		log.Fatal(err)
 		err = entity.STATUS_SERVICE_UNAVAILABLE
+		return 0, err
 	}
 
-	return
+	return todoId, nil
 }
 
+// Todosの取得
 func (tr *todoRepository) ReadTodos() (todos []entity.Todo, err error) {
 
-	// レコードをlimit件取得
-	record := []entity.Todo{}
+	// // 取得するレコード
+	// record := []entity.Todo{}
 
 	// 実行するSQL (プレースホルダを使う)
-	query := `SELECT id, text, done, created_at, updated_at FROM Todos`
+	query := `SELECT id, text, done FROM todos LIMIT 100`
 
 	// レコードを割り当てる
-	err = tr.db.QueryRow(query).Scan(&record)
-
+	rows, err := tr.Db.Query(query)
 	if err != nil {
+		log.Fatal(err)
 		err = entity.STATUS_SERVICE_UNAVAILABLE
-		return
+		return nil, err
 	}
 
-	// 戻り値
-	todos = record
-	return
+	defer rows.Close()
+
+	for rows.Next() {
+		todo := entity.Todo{}
+		err := rows.Scan(&todo.Id, &todo.Text, &todo.Done)
+		if err != nil {
+			log.Fatal(err)
+			return nil, err
+		}
+		todos = append(todos, todo)
+	}
+
+	return todos, nil
+}
+
+// Todosの取得
+
+// エラー時に初期値を返す
+func (tr *todoRepository) ReadTodo(todoId int) (todo entity.Todo, err error) {
+
+	// 実行するSQL
+	query := `SELECT id, text, done FROM todos WHERE id = $1`
+
+	// レコードを割り当てる
+	err = tr.Db.QueryRow(query, todoId).Scan(&todo.Id, &todo.Text, &todo.Done)
+
+	if err != nil {
+		log.Fatal(err)
+
+		// 初期値を返す
+		return entity.Todo{}, err
+	}
+
+	return todo, nil
 }

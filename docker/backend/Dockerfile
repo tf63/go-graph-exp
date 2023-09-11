@@ -1,5 +1,6 @@
 # syntax=docker/dockerfile:1
 FROM golang:1.19-alpine
+# FROM golang:1.19-alpine as builder
 
 # ワークディレクトリの指定
 WORKDIR /app
@@ -20,5 +21,13 @@ RUN make install-tools
 
 # ポートの開放
 EXPOSE 8080
-EXPOSE 8081
-EXPOSE 6060
+
+
+# ARG CGO_ENABLED=0
+# ARG GOOS=linux
+# ARG GOARCH=amd64
+# RUN go build -ldflags '-s -w' ./server.go
+
+# FROM alpine
+# COPY --from=builder /build/server.go /app
+# ENTRYPOINT ["/app/server"]

@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/tf63/go-graph-exp/api/graph"
 )
@@ -17,25 +18,73 @@ func (r *mutationResolver) CreateTodo(ctx context.Context, input graph.NewTodo) 
 	// (今回は実装しません)
 	// -----------------------------------
 
-	// 作成したTodoを返す
-	todo1 := graph.Todo{
-		ID:   "1",
-		Text: "todo 1",
-		Done: false,
+	// テストデータを返す
+	// todo := graph.Todo{
+	// 	ID:   "1",
+	// 	Text: "todo 1",
+	// 	Done: false,
+	// }
+
+	inputEntity := NewTodoDTO(input)
+
+	todoId, err := r.Tr.CreateTodo(inputEntity)
+	if err != nil {
+		err = TodoErrorHandler("Create", err)
+		return nil, err
 	}
-	return &todo1, nil
+
+	todoEntity, err := r.Tr.ReadTodo(todoId)
+	if err != nil {
+		err = TodoErrorHandler("Read", err)
+		return nil, err
+	}
+
+	todo := TodoDTO(todoEntity)
+
+	return &todo, nil
 }
 
 // Todos is the resolver for the todos field.
 func (r *queryResolver) Todos(ctx context.Context) ([]*graph.Todo, error) {
 	// テストデータを返す
-	todos := []*graph.Todo{
-		{ID: "1", Text: "todo 1", Done: false},
-		{ID: "2", Text: "todo 2", Done: false},
-		{ID: "3", Text: "todo 3", Done: false},
+	// todos := []*graph.Todo{
+	// 	{ID: "1", Text: "todo 1", Done: false},
+	// 	{ID: "2", Text: "todo 2", Done: false},
+	// 	{ID: "3", Text: "todo 3", Done: false},
+	// }
+
+	todosEntity, err := r.Tr.ReadTodos()
+	if err != nil {
+		err = TodoErrorHandler("Read", err)
+		return nil, err
+	}
+
+	todos := []*graph.Todo{}
+	for _, todoEntity := range todosEntity {
+		todo := TodoDTO(todoEntity)
+		todos = append(todos, &todo)
 	}
 
 	return todos, nil
+}
+
+// Todo is the resolver for the todo field.
+func (r *queryResolver) Todo(ctx context.Context, input string) (*graph.Todo, error) {
+	todoId, err := strconv.Atoi(input)
+	if err != nil {
+		err = TodoErrorHandler("Read", err)
+		return nil, err
+	}
+
+	todoEntity, err := r.Tr.ReadTodo(todoId)
+	if err != nil {
+		err = TodoErrorHandler("Read", err)
+		return nil, err
+	}
+
+	todo := TodoDTO(todoEntity)
+
+	return &todo, nil
 }
 
 // Mutation returns graph.MutationResolver implementation.

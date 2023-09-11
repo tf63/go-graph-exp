@@ -6,6 +6,7 @@ type Todo {
 
 type Query {
   todos: [Todo!]!
+  todo(input: String!): Todo!
 }
 
 input NewTodo {

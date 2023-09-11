@@ -7,7 +7,9 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/tf63/go-graph-exp/api/graph"         // 修正
+	"github.com/tf63/go-graph-exp/api/graph" // 修正
+	"github.com/tf63/go-graph-exp/external"
+	"github.com/tf63/go-graph-exp/internal/repository"
 	"github.com/tf63/go-graph-exp/internal/resolver" // 修正
 )
 
@@ -19,7 +21,11 @@ func main() {
 		port = defaultPort
 	}
 
-	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &resolver.Resolver{}})) // 修正
+	// レイヤードアーキテクチャでAPIを設計
+	// DIを入れている
+	db, _ := external.ConnectDatabase()
+	ntr := repository.NewTodoRepository(db)
+	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &resolver.Resolver{Tr: ntr}})) // 修正
 
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	http.Handle("/query", srv)

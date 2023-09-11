@@ -4,8 +4,10 @@ GoのGraphQLライブラリとして`gqlgen`があります
 
 今回は`gqlgen`を使ってGraphQLのサーバーを立ち上げるまでのチュートリアルを作成していきます
 
+Github: https://github.com/tf63/go-graph-exp
+
 ### gqlgenのインストール
-```
+```bash
     go get github.com/99designs/gqlgen@latest
     go install github.com/99designs/gqlgen@latest
 
@@ -23,7 +25,7 @@ GoのGraphQLライブラリとして`gqlgen`があります
 
 `graph/`は後で作り直すので，一旦削除しましょう
 
-```
+```bash
     .
     ├── gqlgen.yml
     ├── graph
@@ -41,6 +43,8 @@ GoのGraphQLライブラリとして`gqlgen`があります
 `gqlgen`は`*.graphqls`に記述したGraphQLのスキーマから，雛形となるコードを自動生成してくれます
 
 `api/graph`ディレクトリを作成し，今回作成するGraphQLのスキーマとして`api/graph/todo.graphqls`を用意します
+
+- (参考) https://graphql.org/learn/schema
 
 ```todo.graphqls
     type Todo {
@@ -97,7 +101,7 @@ GoのGraphQLライブラリとして`gqlgen`があります
 
 `server.go`がエラーを吐いてしまうので中身をすべてコメントアウトしておいたほうが良いかもしれません
 
-```
+```bash
     gqlgen generate
 ```
 
@@ -135,7 +139,7 @@ GoのGraphQLライブラリとして`gqlgen`があります
 ```
 
 次の構成になっているはずです
-```
+```bash
 .
 ├── api
 │   └── graph
@@ -232,10 +236,10 @@ GoのGraphQLライブラリとして`gqlgen`があります
 
 GraphQLのサーバーを起動してみます
 
-`Dockerfile`を用意してあります (余計なポートまで空けていますが)
+一応`Dockerfile`を用意してあります
 - https://github.com/tf63/go-graph-exp/blob/main/docker/backend/Dockerfile
 
-```
+```bash
     go run server.go
 ```
 
@@ -246,7 +250,7 @@ GraphQLのサーバーを起動してみます
 
 意味はないですが，引数には`text: "todo 1"`を指定します
 
-```
+```graphql
     mutation {
         createTodo (input: {text: "todo 1"}) {
             id # idを返す
@@ -255,7 +259,7 @@ GraphQLのサーバーを起動してみます
     }
 ```
 レスポンスが返ってきます
-```
+```json
     {
         "data": {
             "createTodo": {
@@ -267,7 +271,7 @@ GraphQLのサーバーを起動してみます
 ```
 
 `query`も実行してみましょう
-```
+```graphql
     query {
         todos {
             id,
@@ -278,7 +282,7 @@ GraphQLのサーバーを起動してみます
 ```
 
 先程登録したテストデータが返ってきます
-```
+```json
     {
         "data": {
             "todos": [
@@ -303,3 +307,18 @@ GraphQLのサーバーを起動してみます
 ```
 
 ![](img/graph-1.png)
+
+
+### 参考
+
+gqlgen公式チュートリアル
+
+https://gqlgen.com/getting-started
+
+GraphQL スキーマ
+
+https://graphql.org/learn/schema
+
+GraphQLベストプラクティス
+
+https://maku.blog/p/4reqy9i
