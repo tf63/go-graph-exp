@@ -1,12 +1,38 @@
 # GoでGraphQLを導入する
 
-GoのGraphQLライブラリとして`gqlgen`があります
-
 今回は`gqlgen`を使ってGraphQLのサーバーを立ち上げるまでのチュートリアルを作成していきます
 
-Github: https://github.com/tf63/go-graph-exp
+- Github: https://github.com/tf63/go-graph-exp
 
-### gqlgenのインストール
+- 実行環境: https://github.com/tf63/go-graph-exp/blob/main/docker/backend/Dockerfile
+
+### GraphQLってどういうもの?
+RESTとの違いを示します
+
+REST
+- 複数のエンドポイント
+- エンドポイントごとに固定のデータを取得
+- HTTPメソッドによって実行する処理を決定
+- HTTPステータスコードでエラーハンドリング
+- 型定義があいまい
+
+GraphQL
+- 単一のエンドポイント
+- エンドポイントから必要なデータを指定して取得
+- query, mutationによって実行する処理を決定
+- メッセージでエラーハンドリング
+- 型定義が厳密
+
+RESTでは，クライアントが必要なデータを取得するために複数のエンドポイントから過剰なデータを取得していました
+
+GraphQLでは，クライアントは単一のエンドポイントから必要な分だけデータを取得することが可能で，無駄なデータ通信やリクエストを削減できます
+
+### GoでGraphQLを使ってみる
+
+GoのGraphQLライブラリとして`gqlgen`があります
+
+インストール方法
+
 ```bash
     go get github.com/99designs/gqlgen@latest
     go install github.com/99designs/gqlgen@latest
@@ -29,12 +55,12 @@ Github: https://github.com/tf63/go-graph-exp
     .
     ├── gqlgen.yml
     ├── graph
-    │   ├── generated.go
+    │   ├── generated.go # GraphQLサーバー (触らない)
     │   ├── model
-    │   │   └── models_gen.go
-    │   ├── resolver.go
-    │   ├── schema.graphqls
-    │   └── schema.resolvers.go
+    │   │   └── models_gen.go # スキーマで定義したmodel (触らない)
+    │   ├── resolver.go # 雛形 (触る)
+    │   ├── schema.graphqls # スキーマ　(触る)
+    │   └── schema.resolvers.go # 雛形 (触る)
     └── server.go
 ```
 
@@ -46,21 +72,30 @@ Github: https://github.com/tf63/go-graph-exp
 
 - (参考) https://graphql.org/learn/schema
 
+- GraphQLのデータ操作は，`Query`と`Mutation`に分けられます
+- `Query`はデータ取得に相当します
+- `Mutation`はそれ以外の操作に相当します
+
 ```todo.graphqls
+    # Todoモデル
     type Todo {
         id: ID!
         text: String!
         done: Boolean!
     }
 
+    # データ取得
     type Query {
         todos: [Todo!]!
     }
 
+    # mutationのinput
     input NewTodo {
         text: String!
     }
 
+    # データ作成
+    # ここにupdateTodoとかdeleteTodoとかも書いたりする
     type Mutation {
         createTodo(input: NewTodo!): Todo!
     }
@@ -87,11 +122,11 @@ Github: https://github.com/tf63/go-graph-exp
         filename: api/graph/types.gen.go
         package: graph
 
-    # 自動生成される雛形 (これを実装することになる)
+    # 自動生成される雛形 (これを実装する)
     resolver:
         layout: follow-schema
-        dir: internal/handler
-        package: handler
+        dir: internal/resolver
+        package: resolver
         filename_template: "{name}.resolvers.go"
 
     (略)
@@ -99,7 +134,7 @@ Github: https://github.com/tf63/go-graph-exp
 
 変更した`gqlgen.yml`をもとにコードを再生成します
 
-`server.go`がエラーを吐いてしまうので中身をすべてコメントアウトしておいたほうが良いかもしれません
+- `server.go`がエラーを吐いてしまうので中身をすべてコメントアウトしておいたほうが良いかもしれません
 
 ```bash
     gqlgen generate
@@ -143,15 +178,15 @@ Github: https://github.com/tf63/go-graph-exp
 .
 ├── api
 │   └── graph
-│       ├── generated.go
-│       ├── todo.graphqls
-│       └── types.gen.go
+│       ├── generated.go # 触らない
+│       ├── todo.graphqls # スキーマファイル
+│       └── types.gen.go # 触らない
 ├── gqlgen.yml
 ├── internal
 │   └── resolver
-│       ├── resolver.go
-│       └── todo.resolvers.go
-└── server.go
+│       ├── resolver.go # 触る
+│       └── todo.resolvers.go # 触る
+└── server.go # 触る
 ```
 
 ### Resolverの実装
@@ -200,7 +235,7 @@ Github: https://github.com/tf63/go-graph-exp
 
 本記事では，実際にDBに接続して動作するところまでは紹介しません
 
-(Github上では実装しているので興味があれば)
+([Github](https://github.com/tf63/go-graph-exp)上では実装しているので興味があれば)
 
 ```todo.resolvers.go
     // CreateTodo is the resolver for the createTodo field.
@@ -309,6 +344,8 @@ GraphQLのサーバーを起動してみます
 ![](img/graph-1.png)
 
 
+以上です．余裕があればロジック部分も記事にします
+
 ### 参考
 
 gqlgen公式チュートリアル
@@ -322,3 +359,7 @@ https://graphql.org/learn/schema
 GraphQLベストプラクティス
 
 https://maku.blog/p/4reqy9i
+
+API設計の参考
+
+https://github.com/koga456/sample-api/tree/master
