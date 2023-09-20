@@ -279,9 +279,12 @@ GraphQLのサーバーを起動してみます
 ```
 
 `http://localhost:8080`にアクセスするとGraphQL PlayGroundが表示されます
+
 ![](img/graph.png)
 
 先程作成した`createTodo`を実行してみます
+
+実行結果としてid, textを取得してみます
 
 意味はないですが，引数には`text: "todo 1"`を指定します
 
@@ -293,13 +296,15 @@ GraphQLのサーバーを起動してみます
         }
     }
 ```
-レスポンスが返ってきます
+
+id, textを含んだレスポンスが返ってきます
+
 ```json
     {
         "data": {
             "createTodo": {
-            "id": "1",
-            "text": "todo 1"
+                "id": "1",
+                "text": "todo 1"
             }
         }
     }
